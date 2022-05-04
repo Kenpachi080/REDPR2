@@ -26,7 +26,6 @@ class RebootPasswordRequest extends FormRequest
         return [
             'oldpassword' => 'required',
             'newspassword' => 'required',
-            'phone' => 'required'
         ];
     }
 }

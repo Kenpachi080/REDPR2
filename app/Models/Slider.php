@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 
-class Itemdescript extends Model
+class Slider extends Model
 {
     public $timestamps = false;
 }

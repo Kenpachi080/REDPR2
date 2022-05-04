@@ -24,18 +24,14 @@ class OrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'countitem' => 'required',
-            'sum' => 'required',
             'deliverytype' => 'required',
             'name' => 'required',
             'phone' => 'required',
             'secondphone' => 'required',
             'email' => 'required',
-            'endsum' => 'required',
             'typepayment' => 'required',
             'paid' => 'required',
             'items' => 'required',
-            'sumitems' => 'required',
         ];
     }
 }

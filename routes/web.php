@@ -1,6 +1,13 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController as AuthController;
+use App\Http\Controllers\IndexController as IndexController;
+use App\Http\Controllers\BasketController as BasketController;
+use App\Http\Controllers\ItemController as ItemController;
+use App\Http\Controllers\FavoriteController as FavoriteController;
+use App\Http\Controllers\OrderController as OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +27,8 @@ Route::get('/', function () {
 
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
+});
+
+Route::post('/test', function () {
+    return response('privet', 200);
 });

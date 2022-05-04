@@ -3,17 +3,66 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ChangeRequest;
+use App\Http\Requests\ForgotRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RebootPasswordRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Mail\Register;
 
+use App\Mail\RegisterMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    /**
+     * @OA\Post(
+     * path="/api/auth/register",
+     * summary="Регистрация",
+     * description="Регистрация",
+     * operationId="authRegister",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Регистрация",
+     *    @OA\JsonContent(
+     *       required={"phone, password, email"},
+     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
+     *       @OA\Property(property="password", type="string", format="string", example="123"),
+     *       @OA\Property(property="email", type="string", format="string", example="testemail@mail.ru"),
+     *    ),
+     * ),
+     *
+     * @OA\Response(
+     *    response=201,
+     *    description="Возврощается полная информация про пользователя, и его токен для дальнейшей работы с юзером",
+     *    @OA\JsonContent(
+     *       type="object",
+     *             @OA\Property(
+     *                property="user",
+     *                type="object",
+     *               example={
+     *                  "name": "+7712308",
+     *                   "email": "test1231email@mail.ru",
+     *                   "updated_at": "2022-04-20T19:53:52.000000Z",
+     *                   "created_at": "2022-04-20T19:53:52.000000Z",
+     *                   "id": 10,
+     *                   "api_token": "18|TuQoXj84z5IxclUeRK89bSS4839sQfJ8KsQRVRVO"
+     *                  }
+     *              ),
+     *     @OA\Property(
+     *                property="token",
+     *                type="string",
+     *               example="18|TuQoXj84z5IxclUeRK89bSS4839sQfJ8KsQRVRVO",
+     *              ),
+     *     ),
+     *        )
+     *     )
+     * )
+     */
     public function register(RegisterRequest $request)
     {
         $user = User::create([
@@ -24,7 +73,8 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
-
+        $user->api_token = $token;
+        $user->save();
         $response = [
             'user' => $user,
             'token' => $token,
@@ -32,17 +82,69 @@ class AuthController extends Controller
         return response($response, 201);
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/auth/login",
+     * summary="Авторизация",
+     * description="Авторизация по АПИ токену",
+     * operationId="authLogin",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"phone, password"},
+     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
+     *       @OA\Property(property="password", type="string", format="string", example="123"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=201,
+     *    description="Возврощается полная информация про пользователя, и его токен для дальнейшей работы с юзером",
+     *    @OA\JsonContent(
+     *       type="object",
+     *             @OA\Property(
+     *                property="user",
+     *                type="object",
+     *               example={
+     *                  "id": 8,
+     *                     "role_id": 2,
+     *                     "name": "+7708",
+     *                     "email": "testemail@mail.ru",
+     *                     "avatar": "users/default.png",
+     *                     "email_verified_at": null,
+     *                     "settings": null,
+     *                     "created_at": "2022-04-20T19:31:30.000000Z",
+     *                     "updated_at": "2022-04-20T19:58:44.000000Z",
+     *                     "fio": null,
+     *                   "telephone": null,
+     *                     "birthday": null,
+     *                     "address": null,
+     *                     "api_token": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+     *                  }
+     *              ),
+     *     @OA\Property(
+     *                property="token",
+     *                type="string",
+     *               example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM",
+     *              ),
+     *     ),
+     *        )
+     *     )
+     * )
+     */
     public function login(LoginRequest $request)
     {
-        $user = User::where('Name', $request->phone)->first();
+        $user = User::where('name', '=', $request->phone)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
                 'message' => 'Неверный пароль'
             ], 401);
         }
 
-        $token = $user->createToken('myapptoken')->plainTextToken;
-
+        $token = Str::random(60);
+        $user->api_token = $token;
+        $user->save();
         $response = [
             'user' => $user,
             'token' => $token
@@ -50,9 +152,41 @@ class AuthController extends Controller
         return response($response, 201);
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/auth/rebootpassword",
+     * summary="Поменять пароль",
+     * description="Поменять пароль",
+     * operationId="rebootpassword",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"oldpassword, newpassword"},
+     *       @OA\Property(property="oldpassword", type="string", format="string", example="123"),
+     *       @OA\Property(property="newspassword", type="string", format="string", example="321"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=201,
+     *    description="CallBack с статусом",
+     *    @OA\JsonContent(
+     *       type="object",
+     *     @OA\Property(
+     *                property="message",
+     *                type="string",
+     *               example="Пароль был успешно изменен",
+     *              ),
+     *     ),
+     *        )
+     *     )
+     * )
+     */
     public function rebootpassword(RebootPasswordRequest $request)
     {
-        $user = User::where('name', '=', $request->phone)->first();
+        $user = User::where('id', '=', Auth::id())->first();
         if (!$user || !Hash::check($request->oldpassword, $user->password)) {
             return response([
                 'message' => "Неверный старый пароль"
@@ -65,10 +199,56 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/auth/change",
+     * summary="Поменять данные клиента",
+     * description="Поменять данные клиента",
+     * operationId="authChange",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"fio, email, telephone, address"},
+     *       @OA\Property(property="fio", type="string", format="string", example="123"),
+     *       @OA\Property(property="email", type="string", format="string", example="321"),
+     *       @OA\Property(property="telephone", type="string", format="string", example="321"),
+     *       @OA\Property(property="address", type="string", format="string", example="321"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=201,
+     *    description="CallBack с статусом",
+     *    @OA\JsonContent(
+     *       type="object",
+     *             @OA\Property(
+     *                property="user",
+     *                type="object",
+     *               example={
+     *                      "id": 8,
+     *                      "api_token": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM",
+     *                      "fio": "123",
+     *                      "email": "321",
+     *                      "telephone": "321",
+     *                      "address": "321"
+     *                  }
+     *              ),
+     *     @OA\Property(
+     *                property="message",
+     *                type="string",
+     *               example="Данные успешно были изменены",
+     *              ),
+     *     ),
+     *        )
+     *     )
+     * )
+     */
     public function change(ChangeRequest $request)
     {
 
-        $user = User::where('id', '=', $request->UserID)->first();
+        $user = User::where('id', '=', Auth::id())->select('id', 'api_token', 'fio', 'email', 'telephone', 'address')->first();
         if (!$user) {
             return response([
                 'message' => 'Пользователь не был найден'
@@ -81,15 +261,14 @@ class AuthController extends Controller
         $user->save();
         return response([
             'message' => 'Данные успешно были изменены',
-            'data' => $request
-        ]);
+            'user' => $user
+        ], 201);
     }
 
     /* доделать */
     public function forgot()
     {
-        Mail::to("saxah23332@gmail.com")->send(new Register('saxah23332@gmail.com')); // mail: saxah232@mail.ru
-        return response('privet', 201);
+        Mail::to('saxah23332@gmail.com')->send(new RegisterMail());
     }
 }
 

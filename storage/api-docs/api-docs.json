@@ -1,0 +1,718 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "REDPR документация АПИ",
+        "description": "Документация",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/auth/register": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Регистрация",
+                "description": "Регистрация",
+                "operationId": "authRegister",
+                "requestBody": {
+                    "description": "Регистрация",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone, password, email"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "+7708"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "123"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "testemail@mail.ru"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Возврощается полная информация про пользователя, и его токен для дальнейшей работы с юзером",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object",
+                                            "example": {
+                                                "name": "+7712308",
+                                                "email": "test1231email@mail.ru",
+                                                "updated_at": "2022-04-20T19:53:52.000000Z",
+                                                "created_at": "2022-04-20T19:53:52.000000Z",
+                                                "id": 10,
+                                                "api_token": "18|TuQoXj84z5IxclUeRK89bSS4839sQfJ8KsQRVRVO"
+                                            }
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "18|TuQoXj84z5IxclUeRK89bSS4839sQfJ8KsQRVRVO"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Авторизация",
+                "description": "Авторизация по АПИ токену",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone, password"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "+7708"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Возврощается полная информация про пользователя, и его токен для дальнейшей работы с юзером",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 8,
+                                                "role_id": 2,
+                                                "name": "+7708",
+                                                "email": "testemail@mail.ru",
+                                                "avatar": "users/default.png",
+                                                "email_verified_at": null,
+                                                "settings": null,
+                                                "created_at": "2022-04-20T19:31:30.000000Z",
+                                                "updated_at": "2022-04-20T19:58:44.000000Z",
+                                                "fio": null,
+                                                "telephone": null,
+                                                "birthday": null,
+                                                "address": null,
+                                                "api_token": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                            }
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/rebootpassword": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Поменять пароль",
+                "description": "Поменять пароль",
+                "operationId": "rebootpassword",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "oldpassword, newpassword"
+                                ],
+                                "properties": {
+                                    "oldpassword": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "123"
+                                    },
+                                    "newspassword": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "CallBack с статусом",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Пароль был успешно изменен"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/change": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Поменять данные клиента",
+                "description": "Поменять данные клиента",
+                "operationId": "authChange",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fio, email, telephone, address"
+                                ],
+                                "properties": {
+                                    "fio": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "123"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "telephone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "CallBack с статусом",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "type": "object",
+                                            "example": {
+                                                "id": 8,
+                                                "api_token": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM",
+                                                "fio": "123",
+                                                "email": "321",
+                                                "telephone": "321",
+                                                "address": "321"
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Данные успешно были изменены"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/favorite/add": {
+            "post": {
+                "tags": [
+                    "favorite"
+                ],
+                "summary": "Добавить предмет в избранные",
+                "description": "Добавить в избранные",
+                "operationId": "additem",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "api_token, ItemID"
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                    },
+                                    "ItemID": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "10"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Товары"
+                    }
+                }
+            }
+        },
+        "/api/favorite/view": {
+            "post": {
+                "tags": [
+                    "favorite"
+                ],
+                "summary": "Посмотреть избранные",
+                "description": "Посмотреть избранные",
+                "operationId": "view",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "api_token"
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Товары"
+                    }
+                }
+            }
+        },
+        "/api/favorite/delete": {
+            "post": {
+                "tags": [
+                    "favorite"
+                ],
+                "summary": "Убрать предмет из избранных",
+                "description": "Убрать из избранные",
+                "operationId": "deleteitem",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "api_token, ItemID"
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
+                                    },
+                                    "ItemID": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "10"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Товары"
+                    }
+                }
+            }
+        },
+        "/api/index": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Информация про сайт",
+                "operationId": "viewIndex",
+                "responses": {
+                    "200": {
+                        "description": "Возврощается полная информация про сайт"
+                    }
+                }
+            }
+        },
+        "/api/partner": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Партнёры",
+                "operationId": "viewpartner",
+                "responses": {
+                    "200": {
+                        "description": "Информация про парнеров"
+                    }
+                }
+            }
+        },
+        "/api/payment": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Способы оплаты",
+                "operationId": "viewpayment",
+                "responses": {
+                    "200": {
+                        "description": "Информация про способы оплаты"
+                    }
+                }
+            }
+        },
+        "/api/news": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Новости",
+                "operationId": "viewnews",
+                "responses": {
+                    "200": {
+                        "description": "Новости"
+                    }
+                }
+            }
+        },
+        "/api/news/{id}": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Отдельная новость",
+                "operationId": "viewsolonews",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Айди новости",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Отдельная новость"
+                    }
+                }
+            }
+        },
+        "/api/company": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Компании",
+                "operationId": "viewcompany",
+                "responses": {
+                    "200": {
+                        "description": "Информация про компании"
+                    }
+                }
+            }
+        },
+        "/api/advantage": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Достижения",
+                "operationId": "viewadvantage",
+                "responses": {
+                    "200": {
+                        "description": "Информация про достижения"
+                    }
+                }
+            }
+        },
+        "/api/about": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "О нас",
+                "operationId": "viewabout",
+                "responses": {
+                    "200": {
+                        "description": "Информация про нас"
+                    }
+                }
+            }
+        },
+        "/api/banners": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Баннеры",
+                "operationId": "viewbanners",
+                "responses": {
+                    "200": {
+                        "description": "Информация про баннеры"
+                    }
+                }
+            }
+        },
+        "/api/sliders": {
+            "get": {
+                "tags": [
+                    "view"
+                ],
+                "summary": "Слайдпер",
+                "operationId": "viewsliders",
+                "responses": {
+                    "200": {
+                        "description": "Информация про слайдер"
+                    }
+                }
+            }
+        },
+        "/api/items/": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Поиск по каталогу",
+                "operationId": "item",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Название товара",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Поиск по каталогу"
+                    }
+                }
+            }
+        },
+        "/api/items/{id}": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Отдельный товар",
+                "operationId": "itemsolo",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Айди товара",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Отдельный товар"
+                    }
+                }
+            }
+        },
+        "/api/items/searchproducts": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Отдельный товар",
+                "operationId": "searchproducts",
+                "parameters": [
+                    {
+                        "name": "description",
+                        "in": "query",
+                        "description": "Айди описания(4)",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Отдельный товар"
+                    }
+                }
+            }
+        },
+        "/api/items/category": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Категория",
+                "operationId": "itemcategory",
+                "responses": {
+                    "200": {
+                        "description": "Информация про категории"
+                    }
+                }
+            }
+        },
+        "/api/items/description": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Описание",
+                "operationId": "description",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Категория",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Описание товара"
+                    }
+                }
+            }
+        },
+        "/api/items/category/item": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Поиск товаров по категории",
+                "operationId": "categoryitem",
+                "parameters": [
+                    {
+                        "name": "categoryID",
+                        "in": "query",
+                        "description": "Категория",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Поиск товаров по категории"
+                    }
+                }
+            }
+        },
+        "/api/items/subcategory/item": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Поиск товаров по подКатегории",
+                "operationId": "subcategoryID",
+                "parameters": [
+                    {
+                        "name": "subcategoryID",
+                        "in": "query",
+                        "description": "ПодКатегория",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Поиск товаров по подКатегории"
+                    }
+                }
+            }
+        },
+        "/api/popular": {
+            "get": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Популярные товары",
+                "operationId": "itempopular",
+                "responses": {
+                    "200": {
+                        "description": "Популярные товары"
+                    }
+                }
+            }
+        }
+    }
+}
