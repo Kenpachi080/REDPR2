@@ -246,6 +246,11 @@
                                         "format": "string",
                                         "example": "321"
                                     },
+                                    "birthday": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "23.10.2002"
+                                    },
                                     "api_token": {
                                         "type": "string",
                                         "format": "string",
@@ -272,7 +277,8 @@
                                                 "fio": "123",
                                                 "email": "321",
                                                 "telephone": "321",
-                                                "address": "321"
+                                                "address": "321",
+                                                "birthday": "23.10.2002"
                                             }
                                         },
                                         "message": {
@@ -303,7 +309,7 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "email, telephone"
+                                    "email, phone"
                                 ],
                                 "properties": {
                                     "email": {
@@ -311,7 +317,7 @@
                                         "format": "string",
                                         "example": "321"
                                     },
-                                    "telephone": {
+                                    "phone": {
                                         "type": "string",
                                         "format": "string",
                                         "example": "321"
@@ -351,7 +357,7 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "email, telephone, code"
+                                    "email, phone, code"
                                 ],
                                 "properties": {
                                     "email": {
@@ -359,7 +365,7 @@
                                         "format": "string",
                                         "example": "321"
                                     },
-                                    "telephone": {
+                                    "phone": {
                                         "type": "string",
                                         "format": "string",
                                         "example": "321"
@@ -404,7 +410,7 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "password, email, telephone, address"
+                                    "password, email, phone, address"
                                 ],
                                 "properties": {
                                     "password": {
@@ -417,7 +423,7 @@
                                         "format": "string",
                                         "example": "321"
                                     },
-                                    "telephone": {
+                                    "phone": {
                                         "type": "string",
                                         "format": "string",
                                         "example": "321"
@@ -436,6 +442,49 @@
                 "responses": {
                     "200": {
                         "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/view": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Посмотреть данные",
+                "description": "Посмотреть данные",
+                "operationId": "viewauth",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "api_token"
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с данными",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1140,6 +1189,54 @@
                                         "type": "string",
                                         "format": "string",
                                         "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/order/search": {
+            "post": {
+                "tags": [
+                    "order"
+                ],
+                "summary": "Посмотреть заказы по статусу",
+                "description": "Посмотреть заказы по статусу",
+                "operationId": "orderviewstatus",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "1"
                                     }
                                 },
                                 "type": "object"

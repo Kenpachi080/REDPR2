@@ -150,10 +150,42 @@ class OrderController extends Controller
         return response($order, 200);
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/order/search",
+     * summary="Посмотреть заказы по статусу",
+     * description="Посмотреть заказы по статусу",
+     * operationId="orderviewstatus",
+     * tags={"order"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"status"},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *       @OA\Property(property="status", type="string", format="string", example="1"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
     public function search(Request $request)
     {
-        $order = Orders::where('UserID', '=', Auth::id())
-            ->where('status', '=', $request->status)
+        $order = Orders::leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
+            ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
+            ->leftjoin('Statuses', 'Statuses.id', '=', 'orders.status')
+            ->where('orders.UserID', '=', Auth::id())
+            ->where('orders.status', '=', $request->status)
+            ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
+                'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
+                'orders.created_at', 'orders.UserID',
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'Statuses.name as status')
             ->get();
         return $order;
     }
