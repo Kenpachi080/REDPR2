@@ -288,6 +288,165 @@
                 }
             }
         },
+        "/api/auth/forgot": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Забыл пароль",
+                "description": "забыл пароль",
+                "operationId": "forgot",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email, telephone"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "telephone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "На почту был отправлен код",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/code": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Подтвердить код",
+                "description": "Подтвердить код",
+                "operationId": "code",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email, telephone, code"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "telephone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": ""
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Правильный код",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/changePassword": {
+            "post": {
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Помменять пароль",
+                "description": "Помменять пароль",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password, email, telephone, address"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "123"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "telephone": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "321"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": ""
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/favorite/add": {
             "post": {
                 "tags": [
@@ -554,68 +713,146 @@
                 }
             }
         },
-        "/api/items/": {
-            "get": {
+        "/api/items": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Поиск по каталогу",
+                "description": "Поиск по каталогу",
                 "operationId": "item",
-                "parameters": [
-                    {
-                        "name": "search",
-                        "in": "query",
-                        "description": "Название товара",
-                        "required": true
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "search"
+                                ],
+                                "properties": {
+                                    "search": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "Гипсокартон"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Поиск по каталогу"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/items/{id}": {
-            "get": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Отдельный товар",
+                "description": "Отдельный товар",
                 "operationId": "itemsolo",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Айди товара",
-                        "required": true
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "Айди товара"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Отдельный товар"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/items/searchproducts": {
-            "get": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Отдельный товар",
+                "description": "Отдельный товар",
                 "operationId": "searchproducts",
-                "parameters": [
-                    {
-                        "name": "description",
-                        "in": "query",
-                        "description": "Айди описания(4)",
-                        "required": true
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "search"
+                                ],
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "5"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Отдельный товар"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -657,59 +894,269 @@
             }
         },
         "/api/items/category/item": {
-            "get": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Поиск товаров по категории",
+                "description": "Поиск товаров по категории",
                 "operationId": "categoryitem",
-                "parameters": [
-                    {
-                        "name": "categoryID",
-                        "in": "query",
-                        "description": "Категория",
-                        "required": true
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "search"
+                                ],
+                                "properties": {
+                                    "categoryID": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "1"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Поиск товаров по категории"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/items/subcategory/item": {
-            "get": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Поиск товаров по подКатегории",
+                "description": "Поиск товаров по подКатегории",
                 "operationId": "subcategoryID",
-                "parameters": [
-                    {
-                        "name": "subcategoryID",
-                        "in": "query",
-                        "description": "ПодКатегория",
-                        "required": true
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "search"
+                                ],
+                                "properties": {
+                                    "subcategoryID": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "1"
+                                    },
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
-                        "description": "Поиск товаров по подКатегории"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/popular": {
-            "get": {
+            "post": {
                 "tags": [
                     "item"
                 ],
                 "summary": "Популярные товары",
+                "description": "Популярные товары",
                 "operationId": "itempopular",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    ""
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Популярные товары"
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/items/discount": {
+            "post": {
+                "tags": [
+                    "item"
+                ],
+                "summary": "Популярные товары",
+                "description": "Популярные товары",
+                "operationId": "itemdiscount",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    ""
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/order/view": {
+            "post": {
+                "tags": [
+                    "order"
+                ],
+                "summary": "Посмотреть заказы",
+                "description": "Посмотреть заказы",
+                "operationId": "orderview",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    ""
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/order/view/{id}": {
+            "post": {
+                "tags": [
+                    "order"
+                ],
+                "summary": "Посмотреть заказы",
+                "description": "Посмотреть заказы",
+                "operationId": "orderviewsingle",
+                "requestBody": {
+                    "description": "Апи Токен",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    ""
+                                ],
+                                "properties": {
+                                    "api_token": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "CallBack с товаром",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }

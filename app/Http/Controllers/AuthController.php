@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\ChangeRequest;
+use App\Http\Requests\CodeRequest;
 use App\Http\Requests\ForgotRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RebootPasswordRequest;
 use App\Http\Requests\RegisterRequest;
-use App\Mail\Register;
-
+use App\Mail\ForgotMail;
+use Illuminate\Http\Request;
 use App\Mail\RegisterMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -67,7 +69,7 @@ class AuthController extends Controller
     {
         $user = User::create([
             'name' => $request->phone,
-            'phone' => $request->phone,
+            'telephone' => $request->phone,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
@@ -265,10 +267,139 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /* доделать */
-    public function forgot()
+    /**
+     * @OA\Post(
+     * path="/api/auth/forgot",
+     * summary="Забыл пароль",
+     * description="забыл пароль",
+     * operationId="forgot",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"email, phone"},
+     *       @OA\Property(property="email", type="string", format="string", example="321"),
+     *       @OA\Property(property="phone", type="string", format="string", example="321"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="На почту был отправлен код",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function forgot(ForgotRequest $request)
     {
-        Mail::to('saxah23332@gmail.com')->send(new RegisterMail());
+        if ($request->email) {
+            $user = User::where('email', '=', $request->email)->first();
+        } else if ($request->phone) {
+            $user = User::where('telephone', '=', $request->phone)->first();
+        }
+        if ($user == null) {
+            return response('Не найден пользователь', 404);
+        }
+        $code = Str::random(6);
+        $user->code = $code;
+        $user->save();
+        Mail::to($user->email)->send(new ForgotMail($code));
+        return response('На почту был отпрввлен код', 200);
+    }
+
+    /**
+     * @OA\Post(
+     * path="/api/auth/code",
+     * summary="Подтвердить код",
+     * description="Подтвердить код",
+     * operationId="code",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"email, phone, code"},
+     *       @OA\Property(property="email", type="string", format="string", example="321"),
+     *       @OA\Property(property="phone", type="string", format="string", example="321"),
+     *       @OA\Property(property="code", type="string", format="string", example=""),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="Правильный код",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function code(CodeRequest $request)
+    {
+        if ($request->email) {
+            $user = User::where('email', '=', $request->email)->first();
+        } else if ($request->phone) {
+            $user = User::where('telephone', '=', $request->phone)->first();
+        }
+        if ($user != null) {
+            if ($user->code == $request->code) {
+                return response(['message' => 'Правильный код'], 200);
+            } else {
+                return response(['message' => 'Не правильный код'], 404);
+            }
+        }
+    }
+
+    /**
+     * @OA\Post(
+     * path="/api/auth/changePassword",
+     * summary="Помменять пароль",
+     * description="Помменять пароль",
+     * operationId="changePassword",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"password, email, phone, address"},
+     *       @OA\Property(property="password", type="string", format="string", example="123"),
+     *       @OA\Property(property="email", type="string", format="string", example="321"),
+     *       @OA\Property(property="phone", type="string", format="string", example="321"),
+     *       @OA\Property(property="code", type="string", format="string", example=""),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        if ($request->email) {
+            $user = User::where('email', '=', $request->email)->first();
+        } else if ($request->phone) {
+            $user = User::where('telephone', '=', $request->phone)->first();
+        }
+        if (!$user->code == $request->code) {
+            return response(['message' => 'Не правильный код'], 404);
+        }
+        $user->password = bcrypt($request->password);
+        $user->code = '';
+        $user->save();
+        return response('Пароль успешно заменен', 200);
+    }
+
+    public function view()
+    {
+        $user = User::where('id', '=', Auth::id())
+            ->select('name', 'email', 'created_at', 'fio', 'telephone', 'birthday', 'address')
+            ->first();
+        return $user;
     }
 }
 

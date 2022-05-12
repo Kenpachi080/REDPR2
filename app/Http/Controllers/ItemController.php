@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Basket;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Mostdescription;
 use App\Models\Subcategory;
 use App\Models\Titledescription;
+use App\Models\User as User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
@@ -18,91 +21,125 @@ class ItemController extends Controller
     }
 
     /**
-     * @OA\Get(path="/api/items/",
-     *   tags={"item"},
-     *   operationId="item",
-     *   summary="Поиск по каталогу",
-     *      @OA\Parameter(
-     *         name="search",
-     *         in="query",
-     *         description="Название товара",
-     *         required=true,
-     *      ),
+     * @OA\Post(
+     * path="/api/items",
+     * summary="Поиск по каталогу",
+     * description="Поиск по каталогу",
+     * operationId="item",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"search"},
+     *       @OA\Property(property="search", type="string", format="string", example="Гипсокартон"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Поиск по каталогу",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
     public function items(Request $request)
     {
-//        $category = Category::all();
-//        $response = [];
-//        foreach ($category as $block) {
-//            $subcategory = Subcategory::where('CategoryID', '=', $block->id)->get();
-//            $end = [
-//                'category' => $block,
-//                'subcategory' => $subcategory,
-//            ];
-//            array_push($response, $end);
-//        }
-//        return response($response, 200);
         $item = Item::where('title', 'LIKE', "$request->search%")->get();
         if (count($item) < 1) {
             return response(['message' => 'Ничего не найден'], 404);
         }
+        $favoriteItems = $this->checkuser($request->api_token);
         foreach ($item as $value) {
             $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         return response($item, 200);
     }
 
     /**
-     * @OA\Get(path="/api/items/{id}",
-     *   tags={"item"},
-     *   operationId="itemsolo",
-     *   summary="Отдельный товар",
-     *      @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Айди товара",
-     *         required=true,
-     *      ),
+     * @OA\Post(
+     * path="/api/items/{id}",
+     * summary="Отдельный товар",
+     * description="Отдельный товар",
+     * operationId="itemsolo",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"id"},
+     *       @OA\Property(property="id", type="string", format="string", example="Айди товара"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Отдельный товар",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
-    public function viewitem($item_id)
+    public function viewitem(Request $request, $item_id)
     {
         $item = Item::where('id', '=', $item_id)
-            // ->select('id', 'image', 'title', 'subcontent', 'content', 'price', 'discount', 'count', )
             ->first();
-        $item->image = $this->url . $item->image;
         if (!$item) {
             return response([
                 'message' => 'Товар не был найден'
             ], 404);
         }
+        $item->image = $this->url . $item->image;
+        $favoriteItems = $this->checkuser($request->api_token);
+        if (isset($favoriteItems) && $favoriteItems != []) {
+            if (array_search($item->id, $favoriteItems)) {
+                $item->isFavorite = 1;
+            } else {
+                $item->isFavorite = 0;
+            }
+        } else {
+            $item->isFavorite = 0;
+        }
+        $item->images = $this->multiimage($item->images);
         return response($item, 200);
     }
 
     /**
-     * @OA\Get(path="/api/items/searchproducts",
-     *   tags={"item"},
-     *   operationId="searchproducts",
-     *   summary="Отдельный товар",
-     *      @OA\Parameter(
-     *         name="description",
-     *         in="query",
-     *         description="Айди описания(4)",
-     *         required=true,
-     *      ),
+     * @OA\Post(
+     * path="/api/items/searchproducts",
+     * summary="Отдельный товар",
+     * description="Отдельный товар",
+     * operationId="searchproducts",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"search"},
+     *       @OA\Property(property="description", type="string", format="string", example="5"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Отдельный товар",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
     public function searchproducts(Request $request)
@@ -120,6 +157,20 @@ class ItemController extends Controller
             $response = $most->where('mostitems.valuedescription_id', '=', $request->description);
         }
         $response = $most->get();
+        $favoriteItems = $this->checkuser($request->api_token);
+        foreach ($response as $value) {
+            $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage($value->images);
+        }
         return response($response, 200);
     }
 
@@ -164,45 +215,53 @@ class ItemController extends Controller
     public function description(Request $request)
     {
         if ($request->category) {
+            -
             $category = Category::where('id', '=', $request->category)->get();
         } else {
             $category = Category::all();
         }
-        $response = [];
         foreach ($category as $item) {
             $descriptions = Titledescription::where('CategoryID', '=', $item->id)
                 ->select('id', 'title', 'categoryid')
                 ->get();
-            $return = [];
-            $response[$item->name] = [];
             foreach ($descriptions as $value) {
                 $most = Mostdescription::
                 leftjoin('valuedescriptions', 'valuedescriptions.id', '=', 'mostdescriptions.valuedescription_id')
                     ->where('mostdescriptions.titledescription_id', '=', $value->id)
                     ->select('mostdescriptions.id', 'valuedescriptions.title')
                     ->get();
-                $return[$value->title] = $most;
+                $value->count = $most;
+                $return[] = $value;
             }
-            array_push($response[$item->name], $return);
+            $item->description = $return;
         }
-        return response($response, 200);
+        return response($category, 200);
     }
 
+
     /**
-     * @OA\Get(path="/api/items/category/item",
-     *   tags={"item"},
-     *   operationId="categoryitem",
-     *   summary="Поиск товаров по категории",
-     *      @OA\Parameter(
-     *         name="categoryID",
-     *         in="query",
-     *         description="Категория",
-     *         required=true,
-     *      ),
+     * @OA\Post(
+     * path="/api/items/category/item",
+     * summary="Поиск товаров по категории",
+     * description="Поиск товаров по категории",
+     * operationId="categoryitem",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"search"},
+     *       @OA\Property(property="categoryID", type="string", format="string", example="1"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Поиск товаров по категории",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
     public function categoryitem(Request $request)
@@ -218,28 +277,50 @@ class ItemController extends Controller
                 'Товаров этой категории нету'
             ], 404);
         }
-
+        $favoriteItems = $this->checkuser($request->api_token);
+        foreach ($item as $value) {
+            $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage($value->images);
+        }
         $response = [
             'items' => $item
         ];
         return response($response, 200);
+
     }
 
     /**
-     * @OA\Get(path="/api/items/subcategory/item",
-     *   tags={"item"},
-     *   operationId="subcategoryID",
-     *   summary="Поиск товаров по подКатегории",
-     *      @OA\Parameter(
-     *         name="subcategoryID",
-     *         in="query",
-     *         description="ПодКатегория",
-     *         required=true,
-     *      ),
+     * @OA\Post(
+     * path="/api/items/subcategory/item",
+     * summary="Поиск товаров по подКатегории",
+     * description="Поиск товаров по подКатегории",
+     * operationId="subcategoryID",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"search"},
+     *       @OA\Property(property="subcategoryID", type="string", format="string", example="1"),
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Поиск товаров по подКатегории",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
     public function subcategoryitem(Request $request)
@@ -255,21 +336,51 @@ class ItemController extends Controller
                 'Товаров этой подкатегории нету'
             ], 404);
         }
-        return response($item, 200);
+        $favoriteItems = $this->checkuser($request->api_token);
+        foreach ($item as $value) {
+            $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage($value->images);
+        }
+        $response = [
+            'item' => $item
+        ];
+        return response($response, 200);
     }
 
     /**
-     * @OA\Get(path="/api/popular",
-     *   tags={"item"},
-     *   operationId="itempopular",
-     *   summary="Популярные товары",
+     * @OA\Post(
+     * path="/api/popular",
+     * summary="Популярные товары",
+     * description="Популярные товары",
+     * operationId="itempopular",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={""},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
      * @OA\Response(
      *    response=200,
-     *    description="Популярные товары",
-     *   )
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
      * )
      */
-    public function popular()
+    public function popular(Request $request)
     {
         $item = Item::where('popular', '=', '1')->get();
         if (count($item) < 1) {
@@ -277,10 +388,101 @@ class ItemController extends Controller
                 'message' => 'товаров нету'
             ], 204);
         }
+        $favoriteItems = $this->checkuser($request->api_token);
         foreach ($item as $value) {
             $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage($value->images);
         }
         return response($item, 200);
+    }
+
+    /**
+     * @OA\Post(
+     * path="/api/items/discount",
+     * summary="Популярные товары",
+     * description="Популярные товары",
+     * operationId="itemdiscount",
+     * tags={"item"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={""},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function discount(Request $request)
+    {
+        $item = Item::where('discount', '>', '1')->get();
+        if (count($item) < 1) {
+            return response([
+                'message' => 'товаров нету'
+            ], 204);
+        }
+        $favoriteItems = $this->checkuser($request->api_token);
+        foreach ($item as $value) {
+            $value->image = $this->url . $value->image;
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($value->id, $favoriteItems)) {
+                    $value->isFavorite = 1;
+                } else {
+                    $value->isFavorite = 0;
+                }
+            } else {
+                $value->isFavorite = 0;
+            }
+            $value->images = $this->multiimage($value->images);
+        }
+        return response($item, 200);
+    }
+
+    private function checkuser($token)
+    {
+        $favoriteItems = [];
+        if ($token) {
+            $user = User::where('api_token', '=', $token)->first();
+            if ($user) {
+                Auth::login($user);
+                $favorite = Basket::where('UserID', '=', Auth::id())->get();
+                if (count($favorite) > 0) {
+                    foreach ($favorite as $key) {
+                        $favoriteItems[$key->ItemID] = $key->ItemID;
+                    }
+                }
+            }
+        }
+        return $favoriteItems;
+    }
+
+    private function multiimage($image)
+    {
+        $return = [];
+        if ($image) {
+            foreach ($image as $value) {
+                $return[] = $this->url.$value;
+            }
+        } else {
+            $return = [];
+        }
+        return $return;
     }
 }
 

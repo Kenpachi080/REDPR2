@@ -3,76 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\OrderRequest;
+use App\Models\Basket;
 use App\Models\Item;
 use App\Models\Orders;
 use App\Models\OrdersItem;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 
 class OrderController extends Controller
 {
-//    /**
-//     * @OA\Post(
-//     * path="/api/order/create",
-//     * summary="Создать заказ",
-//     * description="Создать заказ",
-//     * operationId="orderCreate",
-//     * tags={"order"},
-//     * @OA\RequestBody(
-//     *    required=true,
-//     *    description="Request",
-//     *    @OA\JsonContent(
-//     *       required={"deliverytype, name, phone, secondphone, email, typepayment, paid, items"},
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="phone", type="string", format="string", example="+7708"),
-//     *       @OA\Property(property="api_token", type="string", format="string", example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"),
-//     *  ),
-//     * ),
-//     * @OA\Response(
-//     *    response=201,
-//     *    description="Возврощается полная информация про пользователя, и его токен для дальнейшей работы с юзером",
-//     *    @OA\JsonContent(
-//     *       type="object",
-//     *             @OA\Property(
-//     *                property="user",
-//     *                type="object",
-//     *               example={
-//     *                  "id": 8,
-//     *                     "role_id": 2,
-//     *                     "name": "+7708",
-//     *                     "email": "testemail@mail.ru",
-//     *                     "avatar": "users/default.png",
-//     *                     "email_verified_at": null,
-//     *                     "settings": null,
-//     *                     "created_at": "2022-04-20T19:31:30.000000Z",
-//     *                     "updated_at": "2022-04-20T19:58:44.000000Z",
-//     *                     "fio": null,
-//     *                   "telephone": null,
-//     *                     "birthday": null,
-//     *                     "address": null,
-//     *                     "api_token": "FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"
-//     *                  }
-//     *              ),
-//     *     @OA\Property(
-//     *                property="token",
-//     *                type="string",
-//     *               example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM",
-//     *              ),
-//     *     ),
-//     *        )
-//     *     )
-//     * )
-//     */
     public function create(OrderRequest $request)
     {
         $endsum = 0;
+        $id = Auth::id();
         $order = Orders::create([
             'countitem' => $request->countitem,
             'deliverytype' => $request->deliverytype,
@@ -81,7 +25,9 @@ class OrderController extends Controller
             'secondphone' => $request->secondphone,
             'email' => $request->email,
             'typepayment' => $request->typepayment,
-            'paid' => $request->paid]);
+            'paid' => $request->paid,
+            'UserID' => $id
+        ]);
         $items = [];
         foreach ($request->items as $key => $value) {
             $item = Item::where('id', '=', $key)->first();
@@ -93,7 +39,7 @@ class OrderController extends Controller
             } else {
                 $price = $item->price;
             }
-            $endsum = ($endsum + $price) * $value;
+            $endsum = $endsum + $price * $value;
             $orderItem = OrdersItem::create([
                 'OrderID' => $order->id,
                 'ItemID' => $key,
@@ -102,14 +48,113 @@ class OrderController extends Controller
             ]);
             array_push($items, $orderItem);
         }
+        if (!$items) {
+            return response(['message' => 'Товары не существуют'], 404);
+        }
         $order->endsum = $endsum;
         $order->sum = $endsum;
         $order->save();
+        $order = Orders::where('id', '=', $order->id)->first();
         $response = [];
-        $response['Заказ'] = [];
-        $response['Товары'] = [];
-        array_push($response['Заказ'], $order);
-        array_push($response['Товары'], $items);
+        $response['Order'] = [];
+        $response['Items'] = [];
+        array_push($response['Order'], $order);
+        array_push($response['Items'], $items);
         return response($response, 201);
+    }
+
+    /**
+     * @OA\Post(
+     * path="/api/order/view",
+     * summary="Посмотреть заказы",
+     * description="Посмотреть заказы",
+     * operationId="orderview",
+     * tags={"order"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={""},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function view(Request $request)
+    {
+        $order = Orders::where('UserID', '=', Auth::id())
+            ->leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
+            ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
+            ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
+                'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
+                'orders.created_at', 'orders.UserID',
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment')
+            ->get();
+        foreach ($order as $item) {
+            $orderItem = OrdersItem::where('OrderID', '=', $item->id)->get();
+            $item->items = $orderItem;
+        }
+        return response($order, 200);
+    }
+
+    /**
+     * @OA\Post(
+     * path="/api/order/view/{id}",
+     * summary="Посмотреть заказы",
+     * description="Посмотреть заказы",
+     * operationId="orderviewsingle",
+     * tags={"order"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={""},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с товаром",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
+    public function viewsingle(Request $request, $id)
+    {
+        $order = Orders::leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
+            ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
+            ->where('orders.id', '=', $id)
+            ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
+                'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
+                'orders.created_at', 'orders.UserID',
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment')
+            ->first();
+        if ($order) {
+            if (Auth::id() != $order->UserID) {
+                return response(['message' => 'Доступ запрещен'], 403);
+            }
+        } else {
+            return response(['message' => 'Нету заказа'], 404);
+        }
+        $orderItem = OrdersItem::where('OrderID', '=', $order->id)->get();
+        $order->items = $orderItem;
+        return response($order, 200);
+    }
+
+    public function search(Request $request)
+    {
+        $order = Orders::where('UserID', '=', Auth::id())
+            ->where('status', '=', $request->status)
+            ->get();
+        return $order;
     }
 }

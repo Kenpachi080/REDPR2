@@ -16,9 +16,9 @@ class ForgotMail extends Mailable
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($code)
     {
-        //
+        $this->code = $code;
     }
 
     /**
@@ -28,6 +28,9 @@ class ForgotMail extends Mailable
      */
     public function build()
     {
-        return $this->view('view.name');
+        $data = [
+            'code' => $this->code,
+        ];
+        return $this->view('mail', $data);
     }
 }

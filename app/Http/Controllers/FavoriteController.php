@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->url = env('APP_URL', 'http://127.0.0.1:8000');
+        $this->url = $this->url . "/storage/";
+    }
+
     /**
      * @OA\Post(
      * path="/api/favorite/add",
@@ -58,6 +65,7 @@ class FavoriteController extends Controller
             'message' => 'Товар был успешно добавлен'
         ], 201);
     }
+
     /**
      * @OA\Post(
      * path="/api/favorite/view",
@@ -82,8 +90,8 @@ class FavoriteController extends Controller
      */
     public function view()
     {
-        $user  = Auth::id();
-        $basket = Basket::where('baskets.UserID', '=' , $user)
+        $user = Auth::id();
+        $basket = Basket::where('baskets.UserID', '=', $user)
             ->leftjoin('items', 'items.id', '=', 'baskets.ItemID')
             ->get();
         if (count($basket) == 0) {
@@ -91,8 +99,12 @@ class FavoriteController extends Controller
                 'message' => 'Товаров в корзине нет:('
             ], 404);
         }
+        foreach ($basket as $item) {
+            $item->image = $this->url . $item->image;
+        }
         return response($basket, 201);
     }
+
     /**
      * @OA\Post(
      * path="/api/favorite/delete",

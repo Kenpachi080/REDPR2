@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ForgotRequest extends FormRequest
+class ChangePasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,6 +26,8 @@ class ForgotRequest extends FormRequest
         return [
             'email' => '',
             'phone' => '',
+            'code' => 'required',
+            'password' => 'required',
         ];
     }
 }
