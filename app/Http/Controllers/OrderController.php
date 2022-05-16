@@ -99,6 +99,9 @@ class OrderController extends Controller
             ->get();
         foreach ($order as $item) {
             $orderItem = OrdersItem::where('OrderID', '=', $item->id)->get();
+            foreach ($orderItem as $block) {
+                $block->item = $this->items($block->ItemID);
+            }
             $item->items = $orderItem;
         }
         return response($order, 200);
@@ -146,6 +149,9 @@ class OrderController extends Controller
             return response(['message' => 'Нету заказа'], 404);
         }
         $orderItem = OrdersItem::where('OrderID', '=', $order->id)->get();
+        foreach ($orderItem as $block) {
+            $block->item = $this->items($block->ItemID);
+        }
         $order->items = $orderItem;
         return response($order, 200);
     }
@@ -156,5 +162,10 @@ class OrderController extends Controller
             ->where('status', '=', $request->status)
             ->get();
         return $order;
+    }
+
+    private function items($item_id)
+    {
+        return Item::where("id", '=', $item_id)->first();
     }
 }

@@ -215,7 +215,6 @@ class ItemController extends Controller
     public function description(Request $request)
     {
         if ($request->category) {
-            -
             $category = Category::where('id', '=', $request->category)->get();
         } else {
             $category = Category::all();

@@ -296,10 +296,12 @@ class AuthController extends Controller
     {
         if ($request->email) {
             $user = User::where('email', '=', $request->email)->first();
-        } else if ($request->phone) {
-            $user = User::where('telephone', '=', $request->phone)->first();
+        } else if ($request->telephone) {
+            $user = User::where('telephone', '=', $request->telephone)->first();
+        } else {
+            $user = null;
         }
-        if ($user == null) {
+        if ($user == null || !$user) {
             return response('Не найден пользователь', 404);
         }
         $code = Str::random(6);

@@ -101,6 +101,8 @@ class FavoriteController extends Controller
         }
         foreach ($basket as $item) {
             $item->image = $this->url . $item->image;
+            $item->images = $this->multiimage($item->images);
+            $item->isFavorite = 1;
         }
         return response($basket, 201);
     }
@@ -145,5 +147,18 @@ class FavoriteController extends Controller
         return response([
             'message' => 'Товар был удален'
         ], 200);
+    }
+
+    private function multiimage($image)
+    {
+        $return = [];
+        if ($image) {
+            foreach ($image as $value) {
+                $return[] = $this->url.$value;
+            }
+        } else {
+            $return = [];
+        }
+        return $return;
     }
 }
