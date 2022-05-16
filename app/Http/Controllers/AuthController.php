@@ -217,6 +217,7 @@ class AuthController extends Controller
      *       @OA\Property(property="email", type="string", format="string", example="321"),
      *       @OA\Property(property="telephone", type="string", format="string", example="321"),
      *       @OA\Property(property="address", type="string", format="string", example="321"),
+     *       @OA\Property(property="birthday", type="date", format="date", example="23.10.2002"),
      *       @OA\Property(property="api_token", type="string", format="string", example="FKOhXAr6Xhx2e6fMdaKZbTOCxCBwLuJDO3j8fYjRoDG9XoAYKQUSPzayU4BM"),
      *  ),
      * ),
@@ -234,7 +235,8 @@ class AuthController extends Controller
      *                      "fio": "123",
      *                      "email": "321",
      *                      "telephone": "321",
-     *                      "address": "321"
+     *                      "address": "321",
+     *                      "birthday": "23.10.2002",
      *                  }
      *              ),
      *     @OA\Property(
@@ -260,6 +262,7 @@ class AuthController extends Controller
         $user->email = $request->email;
         $user->telephone = $request->telephone;
         $user->address = $request->address;
+        $user->birthday = $request->birthday;
         $user->save();
         return response([
             'message' => 'Данные успешно были изменены',
@@ -396,12 +399,43 @@ class AuthController extends Controller
         return response('Пароль успешно заменен', 200);
     }
 
+    /**
+     * @OA\Post(
+     * path="/api/auth/view",
+     * summary="Посмотреть данные",
+     * description="Посмотреть данные",
+     * operationId="viewauth",
+     * tags={"auth"},
+     * @OA\RequestBody(
+     *    required=true,
+     *    description="Апи Токен",
+     *    @OA\JsonContent(
+     *       required={"api_token"},
+     *       @OA\Property(property="api_token", type="string", format="string", example="6WxjM0XOruMPWPnJKEAPHNIMwNpe0bAU7iGWswoKrQDuXC5MNUmuJh1Y4GuG"),
+     *  ),
+     * ),
+     * @OA\Response(
+     *    response=200,
+     *    description="CallBack с данными",
+     *    @OA\JsonContent(
+     *       type="object",
+     *        )
+     *     )
+     * )
+     */
     public function view()
     {
         $user = User::where('id', '=', Auth::id())
             ->select('name', 'email', 'created_at', 'fio', 'telephone', 'birthday', 'address')
             ->first();
         return $user;
+    }
+
+    private function date_normalise($date, $format)
+    {
+//        $res['date'] = date($format, $date);
+        $res = date($format, $date);
+        return $res->format($format);
     }
 }
 
