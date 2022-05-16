@@ -101,7 +101,7 @@ class FavoriteController extends Controller
         }
         foreach ($basket as $item) {
             $item->image = $this->url . $item->image;
-            $item->images = $this->multiimage($item->images);
+            $item->images = $this->multiimage(json_decode($item->images));
             $item->isFavorite = 1;
         }
         return response($basket, 201);
