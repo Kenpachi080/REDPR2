@@ -191,6 +191,10 @@ class ItemController extends Controller
 
         foreach ($categories as $category) {
             $category->subcategory = Subcategory::where('CategoryID', '=', $category->id)->select('id', 'name', 'image')->get();
+            foreach ($category->subcategory as $block) {
+                $block->image = $this->url.$block->image;
+            }
+            $category->image = $this->url.$category->image;
         }
         return response()->json(['categories' => $categories]);
     }
