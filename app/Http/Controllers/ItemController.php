@@ -113,7 +113,7 @@ class ItemController extends Controller
         } else {
             $item->isFavorite = 0;
         }
-        $item->images = $this->multiimage($item->images);
+        $item->images = $this->multiimage(json_decode($item->images));
         return response($item, 200);
     }
 
@@ -169,7 +169,7 @@ class ItemController extends Controller
             } else {
                 $value->isFavorite = 0;
             }
-            $value->images = $this->multiimage($value->images);
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         return response($response, 200);
     }
@@ -190,7 +190,7 @@ class ItemController extends Controller
         $categories = Category::all();
 
         foreach ($categories as $category) {
-            $category->subcategory = Subcategory::where('CategoryID', '=', $category->id)->select('id', 'name')->get();
+            $category->subcategory = Subcategory::where('CategoryID', '=', $category->id)->select('id', 'name', 'image')->get();
         }
         return response()->json(['categories' => $categories]);
     }
@@ -288,7 +288,7 @@ class ItemController extends Controller
             } else {
                 $value->isFavorite = 0;
             }
-            $value->images = $this->multiimage($value->images);
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         $response = [
             'items' => $item
@@ -347,7 +347,7 @@ class ItemController extends Controller
             } else {
                 $value->isFavorite = 0;
             }
-            $value->images = $this->multiimage($value->images);
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         $response = [
             'item' => $item
@@ -399,7 +399,7 @@ class ItemController extends Controller
             } else {
                 $value->isFavorite = 0;
             }
-            $value->images = $this->multiimage($value->images);
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         return response($item, 200);
     }
@@ -448,7 +448,7 @@ class ItemController extends Controller
             } else {
                 $value->isFavorite = 0;
             }
-            $value->images = $this->multiimage($value->images);
+            $value->images = $this->multiimage(json_decode($value->images));
         }
         return response($item, 200);
     }
@@ -475,8 +475,10 @@ class ItemController extends Controller
     {
         $return = [];
         if ($image) {
-            foreach ($image as $value) {
-                $return[] = $this->url.$value;
+            if (gettype($image) == 'array') {
+                foreach ($image as $value) {
+                    $return[] = $this->url . $value;
+                }
             }
         } else {
             $return = [];
