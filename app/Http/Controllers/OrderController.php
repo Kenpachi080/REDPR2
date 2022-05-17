@@ -41,8 +41,7 @@ class OrderController extends Controller
         if ($id) {
             $create['UserID'] = $id;
         }
-        dd($create);
-        $order = Orders::create();
+        $order = Orders::create($create);
         $items = [];
         foreach ($request->items as $key => $value) {
             $item = Item::where('id', '=', $key)->first();
