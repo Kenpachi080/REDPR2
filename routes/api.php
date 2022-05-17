@@ -77,7 +77,7 @@ Route::group(['prefix' => 'favorite', 'middleware' => "api_auth"], function () {
 });
 
 Route::group(['prefix' => 'order'], function () {
-    Route::post('/create', [OrderController::class, 'create'])->middleware('api_auth')->name('order/create');
+    Route::post('/create', [OrderController::class, 'create'])->name('order/create');
     Route::post('/view', [OrderController::class, 'view'])->middleware('api_auth')->name('order/view');
     Route::post('/search', [OrderController::class, 'search'])->middleware('api_auth')->name('order/search');
     Route::post('/view/{id}', [OrderController::class, 'viewsingle'])->middleware('api_auth')->name('order/viewsingle');

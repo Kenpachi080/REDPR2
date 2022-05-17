@@ -7,6 +7,7 @@ use App\Models\Basket;
 use App\Models\Item;
 use App\Models\Orders;
 use App\Models\OrdersItem;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,8 +17,18 @@ class OrderController extends Controller
     public function create(OrderRequest $request)
     {
         $endsum = 0;
-        $id = Auth::id();
-        $order = Orders::create([
+        if ($request->api_token) {
+            $user = User::where('api_token', '=', $request->api_token)->first();
+            if ($user) {
+                Auth::login($user);
+                $id = Auth::id();
+            } else {
+                $id = null;
+            }
+        } else {
+            $id = null;
+        }
+        $create = [
             'countitem' => $request->countitem,
             'deliverytype' => $request->deliverytype,
             'name' => $request->name,
@@ -26,8 +37,12 @@ class OrderController extends Controller
             'email' => $request->email,
             'typepayment' => $request->typepayment,
             'paid' => $request->paid,
-            'UserID' => $id
-        ]);
+        ];
+        if ($id) {
+            $create['UserID'] = $id;
+        }
+        dd($create);
+        $order = Orders::create();
         $items = [];
         foreach ($request->items as $key => $value) {
             $item = Item::where('id', '=', $key)->first();
