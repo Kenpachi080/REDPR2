@@ -93,6 +93,7 @@ class FavoriteController extends Controller
         $user = Auth::id();
         $basket = Basket::where('baskets.UserID', '=', $user)
             ->leftjoin('items', 'items.id', '=', 'baskets.ItemID')
+            ->where('items.id', '!=', 'null')
             ->get();
         if (count($basket) == 0) {
             return response([

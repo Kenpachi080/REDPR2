@@ -67,13 +67,21 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request)
     {
+        $validateEmail = User::where('email', '=', $request->email)->first();
+        if ($validateEmail) {
+            return response(['Exception' => 'Эта электронная почта уже используется.'], 409);
+        }
+        $validatePhone = User::where('telephone', '=', $request->phone)->first();
+        if ($validatePhone) {
+            return response(['Exception' => 'Этот номер телефона уже используется.'], 409);
+        }
+        $phone = $request->phone;
         $user = User::create([
-            'name' => $request->phone,
-            'telephone' => $request->phone,
+            'name' => $phone,
+            'telephone' => $phone,
             'email' => $request->email,
             'password' => bcrypt($request->password)
         ]);
-
         $token = $user->createToken('myapptoken')->plainTextToken;
         $user->api_token = $token;
         $user->save();

@@ -6,6 +6,7 @@ use App\Models\Basket;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Mostdescription;
+use App\Models\Mostitem;
 use App\Models\Subcategory;
 use App\Models\Titledescription;
 use App\Models\User as User;
@@ -102,6 +103,21 @@ class ItemController extends Controller
                 'message' => 'Товар не был найден'
             ], 404);
         }
+        $description = Item::leftjoin('titledescriptions', 'titledescriptions.categoryid', '=', 'items.CategoryID')
+            ->where('items.id', '=', $item->id)
+            ->select('items.id as item_id', 'titledescriptions.id as titleid', 'titledescriptions.title as title')
+            ->get();
+        foreach ($description as $block) {
+            $valueDesc = Mostdescription::where('mostdescriptions.titledescription_id', '=', $block->titleid)
+                ->leftjoin('valuedescriptions', 'valuedescriptions.id', '=', 'mostdescriptions.valuedescription_id')
+                ->leftjoin('mostitems', 'mostitems.valuedescription_id', '=', 'mostdescriptions.valuedescription_id')
+                ->where('mostitems.item_id', '=', $block->item_id)
+                ->select('valuedescriptions.*')
+                ->first();
+            if ($valueDesc) {
+                $block->description = $valueDesc->title;
+            }
+        }
         $item->image = $this->url . $item->image;
         $favoriteItems = $this->checkuser($request->api_token);
         if (isset($favoriteItems) && $favoriteItems != []) {
@@ -114,6 +130,7 @@ class ItemController extends Controller
             $item->isFavorite = 0;
         }
         $item->images = $this->multiimage(json_decode($item->images));
+        $item->description = $description;
         return response($item, 200);
     }
 
@@ -192,9 +209,9 @@ class ItemController extends Controller
         foreach ($categories as $category) {
             $category->subcategory = Subcategory::where('CategoryID', '=', $category->id)->select('id', 'name', 'image')->get();
             foreach ($category->subcategory as $block) {
-                $block->image = $this->url.$block->image;
+                $block->image = $this->url . $block->image;
             }
-            $category->image = $this->url.$category->image;
+            $category->image = $this->url . $category->image;
         }
         return response()->json(['categories' => $categories]);
     }

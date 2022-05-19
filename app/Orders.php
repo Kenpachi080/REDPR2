@@ -18,5 +18,11 @@ class Orders extends Model
         'email',
         'endsum',
         'typepayment',
-        'paid'];
+        'paid',
+        'UserID',
+        'status',
+        'city',
+        'region',
+        'house'
+    ];
 }

@@ -7,6 +7,7 @@ use App\Models\Basket;
 use App\Models\Item;
 use App\Models\Orders;
 use App\Models\OrdersItem;
+use App\Models\TypeDelivery;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,12 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
+    public function __construct()
+    {
+        $this->url = env('APP_URL', 'http://127.0.0.1:8000');
+        $this->url = $this->url . "/storage/";
+    }
+
     public function create(OrderRequest $request)
     {
         $endsum = 0;
@@ -37,14 +44,21 @@ class OrderController extends Controller
             'email' => $request->email,
             'typepayment' => $request->typepayment,
             'paid' => $request->paid,
+            'status' => 1,
         ];
         if ($id) {
             $create['UserID'] = $id;
         }
+        if ($request->deliverytype == 2) {
+            $create['city'] = $request->city;
+            $create['region'] = $request->region;
+            $create['house'] = $request->house;
+        }
+        $priceDelivery = TypeDelivery::where('id', '=', $request->deliverytype)->first();
         $order = Orders::create($create);
         $items = [];
-        foreach ($request->items as $key => $value) {
-            $item = Item::where('id', '=', $key)->first();
+        foreach ($request->items as $block) {
+            $item = Item::where('id', '=', $block['id'])->first();
             if (!$item) {
                 continue;
             }
@@ -53,18 +67,19 @@ class OrderController extends Controller
             } else {
                 $price = $item->price;
             }
-            $endsum = $endsum + $price * $value;
+            $endsum = $endsum + $price * $block['count'];
             $orderItem = OrdersItem::create([
                 'OrderID' => $order->id,
-                'ItemID' => $key,
+                'ItemID' => $block['id'],
                 'endsum' => $price,
-                'count' => $value,
+                'count' => $block['count'],
             ]);
             array_push($items, $orderItem);
         }
         if (!$items) {
             return response(['message' => 'Товары не существуют'], 404);
         }
+        $endsum = $endsum + $priceDelivery->price;
         $order->endsum = $endsum;
         $order->sum = $endsum;
         $order->save();
@@ -103,7 +118,7 @@ class OrderController extends Controller
      */
     public function view(Request $request)
     {
-        $order = Orders::where('UserID', '=', Auth::id())
+        $order = Orders::where('orders.UserID', '=', Auth::id())
             ->leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
             ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
@@ -199,19 +214,44 @@ class OrderController extends Controller
     {
         $order = Orders::leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
             ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
-            ->leftjoin('Statuses', 'Statuses.id', '=', 'orders.status')
+            ->leftjoin('statuses', 'statuses.id', '=', 'orders.status')
             ->where('orders.UserID', '=', Auth::id())
             ->where('orders.status', '=', $request->status)
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
                 'orders.created_at', 'orders.UserID',
-                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'Statuses.name as status')
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'statuses.name as status')
             ->get();
+        foreach ($order as $item) {
+            $orderItem = OrdersItem::where('OrderID', '=', $item->id)->get();
+            foreach ($orderItem as $block) {
+                $block->item = $this->items($block->ItemID);
+            }
+            $item->items = $orderItem;
+        }
         return $order;
     }
 
     private function items($item_id)
     {
-        return Item::where("id", '=', $item_id)->first();
+        $item = Item::where("id", '=', $item_id)->first();
+        $item->image = $this->url . $item->image;
+        $item->images = $this->multiimage(json_decode($item->images));
+        return $item;
+    }
+
+    private function multiimage($image)
+    {
+        $return = [];
+        if ($image) {
+            if (gettype($image) == 'array') {
+                foreach ($image as $value) {
+                    $return[] = $this->url . $value;
+                }
+            }
+        } else {
+            $return = [];
+        }
+        return $return;
     }
 }
