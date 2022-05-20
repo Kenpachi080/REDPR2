@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\OrderRequest;
 use App\Models\Basket;
+use App\Models\Contacts;
 use App\Models\Item;
 use App\Models\Orders;
 use App\Models\OrdersItem;
@@ -11,6 +12,7 @@ use App\Models\TypeDelivery;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use OpenApi\Attributes\Contact;
 
 
 class OrderController extends Controller
@@ -57,6 +59,7 @@ class OrderController extends Controller
         $priceDelivery = TypeDelivery::where('id', '=', $request->deliverytype)->first();
         $order = Orders::create($create);
         $items = [];
+        $favoriteItems = $this->checkuser($request->api_token);
         foreach ($request->items as $block) {
             $item = Item::where('id', '=', $block['id'])->first();
             if (!$item) {
@@ -68,12 +71,22 @@ class OrderController extends Controller
                 $price = $item->price;
             }
             $endsum = $endsum + $price * $block['count'];
+            if (isset($favoriteItems) && $favoriteItems != []) {
+                if (array_search($item->id, $favoriteItems)) {
+                    $isFavorite = 1;
+                } else {
+                    $isFavorite = 0;
+                }
+            } else {
+                $isFavorite = 0;
+            }
             $orderItem = OrdersItem::create([
                 'OrderID' => $order->id,
                 'ItemID' => $block['id'],
-                'endsum' => $price,
+                'endsum' => $price * $block['count'],
                 'count' => $block['count'],
             ]);
+            $orderItem->isFavorite = $isFavorite;
             array_push($items, $orderItem);
         }
         if (!$items) {
@@ -121,17 +134,28 @@ class OrderController extends Controller
         $order = Orders::where('orders.UserID', '=', Auth::id())
             ->leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
             ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
+            ->leftjoin('statuses', 'statuses.id', 'orders.status')
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
                 'orders.created_at', 'orders.UserID',
-                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment')
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment',
+            'orders.city', 'orders.region', 'orders.house', 'statuses.name as status')
             ->get();
+        $favoriteItems = $this->checkuser($request->api_token);
+        $contacts = Contacts::all();
         foreach ($order as $item) {
             $orderItem = OrdersItem::where('OrderID', '=', $item->id)->get();
             foreach ($orderItem as $block) {
-                $block->item = $this->items($block->ItemID);
+
+                $block->item = $this->items($block->ItemID, $favoriteItems);
             }
             $item->items = $orderItem;
+            if ($item->paid == 1) {
+                $item->paid = "Оплачено";
+            } else {
+                $item->paid = "Не оплачено";
+            }
+            $item->contacts = $contacts;
         }
         return response($order, 200);
     }
@@ -168,7 +192,7 @@ class OrderController extends Controller
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
                 'orders.created_at', 'orders.UserID',
-                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment')
+                'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'orders.city', 'orders.region', 'orders.house')
             ->first();
         if ($order) {
             if (Auth::id() != $order->UserID) {
@@ -177,11 +201,17 @@ class OrderController extends Controller
         } else {
             return response(['message' => 'Нету заказа'], 404);
         }
+        $favoriteItems = $this->checkuser($request->api_token);
         $orderItem = OrdersItem::where('OrderID', '=', $order->id)->get();
         foreach ($orderItem as $block) {
-            $block->item = $this->items($block->ItemID);
+            $block->item = $this->items($block->ItemID, $favoriteItems);
         }
         $order->items = $orderItem;
+        if ($order->paid == 1) {
+            $order->paid = "Оплачено";
+        } else {
+            $order->paid = "Не оплачено";
+        }
         return response($order, 200);
     }
 
@@ -222,21 +252,32 @@ class OrderController extends Controller
                 'orders.created_at', 'orders.UserID',
                 'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'statuses.name as status')
             ->get();
+        $favoriteItems = $this->checkuser($request->api_token);
         foreach ($order as $item) {
             $orderItem = OrdersItem::where('OrderID', '=', $item->id)->get();
             foreach ($orderItem as $block) {
-                $block->item = $this->items($block->ItemID);
+                $block->item = $this->items($block->ItemID, $favoriteItems);
             }
             $item->items = $orderItem;
         }
         return $order;
     }
 
-    private function items($item_id)
+    private function items($item_id, $favoriteItems)
     {
         $item = Item::where("id", '=', $item_id)->first();
         $item->image = $this->url . $item->image;
         $item->images = $this->multiimage(json_decode($item->images));
+        if (isset($favoriteItems) && $favoriteItems != []) {
+            if (array_search($item->id, $favoriteItems)) {
+                $isFavorite = 1;
+            } else {
+                $isFavorite = 0;
+            }
+        } else {
+            $isFavorite = 0;
+        }
+        $item->isFavorite = $isFavorite;
         return $item;
     }
 
@@ -253,5 +294,23 @@ class OrderController extends Controller
             $return = [];
         }
         return $return;
+    }
+
+    private function checkuser($token)
+    {
+        $favoriteItems = [];
+        if ($token) {
+            $user = User::where('api_token', '=', $token)->first();
+            if ($user) {
+                Auth::login($user);
+                $favorite = Basket::where('UserID', '=', Auth::id())->get();
+                if (count($favorite) > 0) {
+                    foreach ($favorite as $key) {
+                        $favoriteItems[$key->ItemID] = $key->ItemID;
+                    }
+                }
+            }
+        }
+        return $favoriteItems;
     }
 }
