@@ -139,7 +139,7 @@ class OrderController extends Controller
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
                 'orders.created_at', 'orders.UserID',
                 'type_deliveries.type as deliverytype', 'type_payments.type as typepayment',
-            'orders.city', 'orders.region', 'orders.house', 'statuses.name as status')
+                'orders.city', 'orders.region', 'orders.house', 'statuses.name as status')
             ->get();
         $favoriteItems = $this->checkuser($request->api_token);
         $contacts = Contacts::all();
@@ -242,11 +242,18 @@ class OrderController extends Controller
      */
     public function search(Request $request)
     {
+        if ($request->status != 0) {
+            $tempStatus = '=';
+            $status = $request->status;
+        } else {
+            $tempStatus = '!=';
+            $status = 'null';
+        }
         $order = Orders::leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
             ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
             ->leftjoin('statuses', 'statuses.id', '=', 'orders.status')
             ->where('orders.UserID', '=', Auth::id())
-            ->where('orders.status', '=', $request->status)
+            ->where('orders.status', $tempStatus, $status)
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid',
                 'orders.created_at', 'orders.UserID',
