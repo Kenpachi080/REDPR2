@@ -188,11 +188,12 @@ class OrderController extends Controller
     {
         $order = Orders::leftjoin('type_deliveries', 'type_deliveries.id', '=', 'orders.deliverytype')
             ->leftjoin('type_payments', 'type_payments.id', '=', 'orders.typepayment')
+            ->leftjoin('statuses', 'statuses.id', 'orders.status')
             ->where('orders.id', '=', $id)
             ->select('orders.id', 'orders.sum', 'orders.name', 'orders.phone',
                 'orders.secondphone', 'orders.email', 'orders.endsum', 'orders.paid', 'orders.UserID',
                 'type_deliveries.type as deliverytype', 'type_payments.type as typepayment', 'orders.city', 'orders.region', 'orders.house'
-            , 'orders.created_at', 'orders.updated_at'
+            , 'orders.created_at', 'orders.updated_at', 'statuses.name as status'
             )
             ->first();
         if ($order) {
@@ -202,6 +203,7 @@ class OrderController extends Controller
         } else {
             return response(['message' => 'Нету заказа'], 404);
         }
+        $contacts = Contacts::all();
         $favoriteItems = $this->checkuser($request->api_token);
         $orderItem = OrdersItem::where('OrderID', '=', $order->id)->get();
         foreach ($orderItem as $block) {
@@ -213,6 +215,7 @@ class OrderController extends Controller
         } else {
             $order->paid = "Не оплачено";
         }
+        $order->contacts = $contacts;
         return response($order, 200);
     }
 
