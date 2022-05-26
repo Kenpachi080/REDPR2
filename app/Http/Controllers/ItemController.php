@@ -164,14 +164,21 @@ class ItemController extends Controller
         $response = $most = \App\Models\Mostitem::leftjoin('items', 'items.id', '=', 'mostitems.item_id')
             ->select('items.id', 'items.title', 'items.image', 'items.subcontent', 'items.content', 'items.price',
                 'items.discount', 'items.count', 'items.CategoryID', 'items.SubCategoryID');
-        if (gettype($request->description) == "array") {
-            if ($request->description) {
+        if ($request->description) {
+            if (gettype($request->description) == "array") {
                 foreach ($request->description as $key => $value) {
                     $response = $most->where('mostitems.valuedescription_id', '=', $value);
                 }
+            } else {
+                $response = $most->where('mostitems.valuedescription_id', '=', $request->description);
             }
-        } else {
-            $response = $most->where('mostitems.valuedescription_id', '=', $request->description);
+        }
+
+        if ($request->minprice) {
+            $response = $most->where('price', '>=', $request->minprice)->where('discount', '>=', $request->minprice);
+        }
+        if ($request->maxprice) {
+            $response = $most->where('price', '<=', $request->maxprice)->orWhere('discount', '<=', $request->maxprice);
         }
         $response = $most->get();
         $favoriteItems = $this->checkuser($request->api_token);
