@@ -301,7 +301,7 @@ class ItemController extends Controller
         $item = Item::where('CategoryID', '=', $request->categoryID)->get();
         if (count($item) < 1) {
             return response([
-                'Товаров этой категории нету'
+                'message' => 'Товаров этой категории нету'
             ], 404);
         }
         $favoriteItems = $this->checkuser($request->api_token);
@@ -360,7 +360,7 @@ class ItemController extends Controller
         $item = Item::where('SubCategoryID', '=', $request->subcategoryID)->get();
         if (count($item) < 1) {
             return response([
-                'Товаров этой подкатегории нету'
+                'message' => 'Товаров этой подкатегории нету'
             ], 404);
         }
         $favoriteItems = $this->checkuser($request->api_token);

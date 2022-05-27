@@ -307,19 +307,19 @@ class AuthController extends Controller
     {
         if ($request->email) {
             $user = User::where('email', '=', $request->email)->first();
-        } else if ($request->telephone) {
-            $user = User::where('telephone', '=', $request->telephone)->first();
+        } else if ($request->phone) {
+            $user = User::where('telephone', '=', $request->phone)->first();
         } else {
             $user = null;
         }
         if ($user == null || !$user) {
-            return response('Не найден пользователь', 404);
+            return response(['message' => 'Не найден пользователь'], 404);
         }
         $code = Str::random(6);
         $user->code = $code;
         $user->save();
         Mail::to($user->email)->send(new ForgotMail($code));
-        return response('На почту был отпрввлен код', 200);
+        return response(['message' => "На почту $user->email был отпрввлен код"], 200);
     }
 
     /**

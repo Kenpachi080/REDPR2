@@ -97,7 +97,7 @@ class FavoriteController extends Controller
             ->get();
         if (count($basket) == 0) {
             return response([
-                'message' => 'Товаров в корзине нет:('
+                'message' => 'Избраных товаров нет:('
             ], 404);
         }
         foreach ($basket as $item) {
